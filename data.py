@@ -7,8 +7,8 @@ import imageio as io
 class JesterDataSet:
     N_CLASSES = 27
 
-    def __init__(self, partition='train', classes=None, proportion=1.0, size=(30, 100, 100, 3),
-                 data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
+    def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=64,
+                 cutoff=True, data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
         """
         Container for the 20BN-JESTER dataset. Note that both the data and the labels have to be downloaded manually
         into the directory specified as an argument. The data can be found at https://www.twentybn.com/datasets/jester.
@@ -18,7 +18,10 @@ class JesterDataSet:
             classes: classes that should be loaded. Either None, in which case all of the classes will be loaded,
                 an int n, in which case n first classes will be loaded, or a list of ints representing IDs, in which
                 case the classes with the specified IDs will be loaded
-            proportion: proportion of data that should be loaded for each class
+            proportion: proportion of the data that should be loaded for each class
+            shape: dimensions of the output videos, in a format (n_frames, height, width, n_channels)
+            cutoff: True if the number of the videos should be a multiplier of the batch size (remaining images will
+                be discarded), False otherwise
             data_path: directory containing the data
         """
         assert partition in ['train', 'validation', 'test']
@@ -28,6 +31,17 @@ class JesterDataSet:
         assert 0 < proportion <= 1.0
         assert os.path.exists(data_path)
 
+        self.shape = shape
+        self.batch_size = batch_size
+        self.data_path = data_path
+        self.label_names = []
+        self.label_dictionary = {}
+        self.labels = None
+        self.video_ids = []
+        self.videos = None
+        self.images_completed = 0
+        self.epochs_completed = 0
+
         if classes is None:
             classes = range(0, 27)
         elif type(classes) is int:
@@ -36,7 +50,6 @@ class JesterDataSet:
         df = pd.read_csv(os.path.join(data_path, 'jester-v1-labels.csv'), header=None)
 
         self.label_names = list(df.loc[classes, 0])
-        self.label_dictionary = {}
 
         for cls in range(len(classes)):
             self.label_dictionary[self.label_names[cls]] = cls
@@ -47,17 +60,7 @@ class JesterDataSet:
             grouped_video_ids = {}
 
             for cls in range(len(classes)):
-                grouped_video_ids[cls] = []
-
-            for row in df.iterrows():
-                video_id, label_name = row[1]
-
-                if label_name not in self.label_names:
-                    continue
-
-                label = self.label_dictionary[label_name]
-
-                grouped_video_ids[label].append(video_id)
+                grouped_video_ids[cls] = list(df[df[1] == self.label_names[cls]][0])
 
             if proportion < 1.0:
                 for cls in range(len(classes)):
@@ -67,20 +70,78 @@ class JesterDataSet:
 
                     grouped_video_ids[cls] = grouped_video_ids[cls][:n]
 
-            self.video_ids = sum(grouped_video_ids.values(), [])
-            self.labels = sum([[cls] * len(grouped_video_ids[cls]) for cls in range(len(classes))], [])
+            self.video_ids = np.array(sum(grouped_video_ids.values(), []))
+            self.labels = np.array(sum([[cls] * len(grouped_video_ids[cls]) for cls in range(len(classes))], []))
         else:
-            self.video_ids = []
+            self.video_ids = np.array(df[0])
 
-            for row in df.iterrows():
-                video_id = row[1][0]
+        if cutoff:
+            length = len(self.video_ids)
+            length = length - length % batch_size
 
-                self.video_ids.append(video_id)
+            self.video_ids = self.video_ids[:length]
 
-            self.labels = None
+            if self.labels is not None:
+                self.labels = self.labels[:length]
+
+        self.shuffle()
+
+        self.videos = []
+
+        for video_id in self.video_ids:
+            self.videos.append(self.load_video(video_id))
+
+        self.videos = np.array(self.videos)
 
     def shuffle(self):
-        pass
+        indices = list(range(len(self.video_ids)))
+        np.random.shuffle(indices)
+
+        self.video_ids = self.video_ids[indices]
+
+        if self.labels is not None:
+            self.labels = self.labels[indices]
+
+        if self.videos is not None:
+            self.videos = self.videos[indices]
 
     def load_video(self, video_id):
-        pass
+        video_directory = os.path.join(self.data_path, '20bn-jester-v1', str(video_id))
+
+        assert os.path.exists(video_directory)
+
+        frame_names = sorted([fn for fn in os.listdir(video_directory) if fn.endswith('.jpg')])
+        n_frames = len(frame_names)
+
+        assert n_frames >= self.shape[0]
+
+        first_frame_index = int((n_frames - self.shape[0]) / 2)
+        frame_names = frame_names[first_frame_index:(first_frame_index + self.shape[0])]
+        frames = []
+
+        for frame_name in frame_names:
+            frames.append(np.array(io.imread(os.path.join(video_directory, frame_name))))
+
+        video = np.stack(frames)
+
+        assert video.shape[1] == self.shape[1]
+        assert video.shape[3] == self.shape[3]
+        assert video.shape[2] >= self.shape[2]
+
+        width_start = int((video.shape[2] - self.shape[2]) / 2)
+        video = video[:, :, width_start:(width_start + self.shape[2]), :]
+
+        return video
+
+    def batch(self):
+        images = self.videos[self.images_completed:(self.images_completed + self.batch_size)]
+        labels = self.labels[self.images_completed:(self.images_completed + self.batch_size)]
+
+        self.images_completed += self.batch_size
+
+        if self.images_completed >= self.length:
+            self.images_completed = 0
+            self.epochs_completed += 1
+            self.shuffle()
+
+        return images, labels
