@@ -39,7 +39,7 @@ class JesterDataSet:
         self.labels = None
         self.video_ids = []
         self.videos = None
-        self.images_completed = 0
+        self.videos_completed = 0
         self.epochs_completed = 0
 
         if classes is None:
@@ -134,14 +134,14 @@ class JesterDataSet:
         return video
 
     def batch(self):
-        images = self.videos[self.images_completed:(self.images_completed + self.batch_size)]
-        labels = self.labels[self.images_completed:(self.images_completed + self.batch_size)]
+        videos = self.videos[self.videos_completed:(self.videos_completed + self.batch_size)]
+        labels = self.labels[self.videos_completed:(self.videos_completed + self.batch_size)]
 
-        self.images_completed += self.batch_size
+        self.videos_completed += self.batch_size
 
-        if self.images_completed >= len(self.videos):
-            self.images_completed = 0
+        if self.videos_completed >= len(self.videos):
+            self.videos_completed = 0
             self.epochs_completed += 1
             self.shuffle()
 
-        return images, labels
+        return videos, labels
