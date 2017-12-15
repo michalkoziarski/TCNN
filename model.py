@@ -111,4 +111,4 @@ class C3DNetwork(Network):
             flatten().\
             fully_connected('fully_connected_6', [-1, 4096], tf.nn.relu).\
             fully_connected('fully_connected_7', [4096, 4096], tf.nn.relu).\
-            fully_connected('fully_connected_8', [4096, self.output_shape[0]], tf.nn.softmax)
+            fully_connected('fully_connected_8', [4096, self.output_shape[0]])
