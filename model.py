@@ -48,7 +48,7 @@ class Network(ABC):
 
         return self
 
-    def fully_connected(self, layer_name, shape, weight_decay=0.0005, activation=None):
+    def fully_connected(self, layer_name, shape, activation=None, weight_decay=0.0005):
         if shape[0] == -1:
             shape[0] = int(np.prod(self.outputs.get_shape()[1:]))
 
@@ -83,3 +83,32 @@ class Network(ABC):
     @abstractmethod
     def setup(self):
         pass
+
+
+class C3DNetwork(Network):
+    def __init__(self, input_shape, output_shape):
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+
+        inputs = tf.placeholder(tf.float32, shape=[None] + input_shape)
+
+        super().__init__('C3D', inputs)
+
+    def setup(self):
+        self.convolution3d('convolution_1', [3, 3, 3, 3, 64]).\
+            pooling3d('pooling_1', [1, 1, 2, 2, 1]).\
+            convolution3d('convolution_2', [3, 3, 3, 64, 128]).\
+            pooling3d('pooling_2', [1, 2, 2, 2, 1]).\
+            convolution3d('convolution_3_1', [3, 3, 3, 128, 256]).\
+            convolution3d('convolution_3_2', [3, 3, 3, 256, 256]).\
+            pooling3d('pooling_3', [1, 2, 2, 2, 1]).\
+            convolution3d('convolution_4_1', [3, 3, 3, 256, 512]).\
+            convolution3d('convolution_4_2', [3, 3, 3, 512, 512]).\
+            pooling3d('pooling_4', [1, 2, 2, 2, 1]).\
+            convolution3d('convolution_5_1', [3, 3, 3, 512, 512]).\
+            convolution3d('convolution_5_2', [3, 3, 3, 512, 512]).\
+            pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
+            flatten().\
+            fully_connected('fully_connected_6', [8192, 4096], tf.nn.relu).\
+            fully_connected('fully_connected_7', [4096, 4096], tf.nn.relu).\
+            fully_connected('fully_connected_8', [4096, self.output_shape[0]], tf.nn.softmax)
