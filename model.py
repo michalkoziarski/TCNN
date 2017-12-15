@@ -109,6 +109,6 @@ class C3DNetwork(Network):
             convolution3d('convolution_5_2', [3, 3, 3, 512, 512]).\
             pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
             flatten().\
-            fully_connected('fully_connected_6', [8192, 4096], tf.nn.relu).\
+            fully_connected('fully_connected_6', [-1, 4096], tf.nn.relu).\
             fully_connected('fully_connected_7', [4096, 4096], tf.nn.relu).\
             fully_connected('fully_connected_8', [4096, self.output_shape[0]], tf.nn.softmax)
