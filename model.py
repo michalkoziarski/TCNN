@@ -86,13 +86,13 @@ class Network(ABC):
 
 
 class C3DNetwork(Network):
-    def __init__(self, input_shape, output_shape):
+    def __init__(self, input_shape, output_shape, name='C3D'):
         self.input_shape = input_shape
         self.output_shape = output_shape
 
         inputs = tf.placeholder(tf.float32, shape=[None] + input_shape)
 
-        super().__init__('C3D', inputs)
+        super().__init__(name, inputs)
 
     def setup(self):
         self.convolution3d('convolution_1', [3, 3, 3, 3, 64]).\
