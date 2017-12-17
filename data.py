@@ -41,6 +41,7 @@ class JesterDataSet:
         self.videos = None
         self.videos_completed = 0
         self.epochs_completed = 0
+        self.length = 0
 
         if classes is None:
             classes = range(0, 27)
