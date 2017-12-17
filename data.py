@@ -75,14 +75,15 @@ class JesterDataSet:
         else:
             self.video_ids = np.array(df[0])
 
-        if cutoff:
-            length = len(self.video_ids)
-            length = length - length % batch_size
+        self.length = len(self.video_ids)
 
-            self.video_ids = self.video_ids[:length]
+        if cutoff:
+            self.length = self.length - self.length % batch_size
+
+            self.video_ids = self.video_ids[:self.length]
 
             if self.labels is not None:
-                self.labels = self.labels[:length]
+                self.labels = self.labels[:self.length]
 
         self.shuffle()
 
