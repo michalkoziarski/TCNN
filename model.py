@@ -80,6 +80,31 @@ class Network(ABC):
 
         return variable
 
+    def predict(self, inputs, batch_size, session=None):
+        session_passed = session is not None
+
+        if not session_passed:
+            session = tf.Session()
+
+        predictions = np.full(len(inputs), np.nan)
+        position = 0
+
+        while position < len(inputs):
+            batch = inputs[position:(position + batch_size)]
+            batch_predictions = tf.argmax(self.outputs, 1).eval(feed_dict={self.inputs: batch}, session=session)
+            predictions[position:(position + batch_size)] = batch_predictions
+            position += batch_size
+
+        if not session_passed:
+            session.close()
+
+        return predictions
+
+    def accuracy(self, inputs, ground_truth, batch_size, session=None):
+        predictions = self.predict(inputs, batch_size, session)
+
+        return np.mean(predictions == ground_truth)
+
     @abstractmethod
     def setup(self):
         pass
