@@ -115,10 +115,15 @@ class JesterDataSet:
         frame_names = sorted([fn for fn in os.listdir(video_directory) if fn.endswith('.jpg')])
         n_frames = len(frame_names)
 
-        assert n_frames >= self.shape[0]
+        if n_frames >= self.shape[0]:
+            first_frame_index = int((n_frames - self.shape[0]) / 2)
+            frame_names = frame_names[first_frame_index:(first_frame_index + self.shape[0])]
+        else:
+            n_frames_missing = self.shape[0] - n_frames
+            n_before = int(n_frames_missing / 2)
+            n_after = n_frames_missing - n_before
+            frame_names = [frame_names[0]] * n_before + frame_names + [frame_names[-1]] * n_after
 
-        first_frame_index = int((n_frames - self.shape[0]) / 2)
-        frame_names = frame_names[first_frame_index:(first_frame_index + self.shape[0])]
         frames = []
 
         for frame_name in frame_names:
