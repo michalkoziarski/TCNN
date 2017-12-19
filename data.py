@@ -167,7 +167,7 @@ class JesterDataSet:
 
         self.videos_completed += self.batch_size
 
-        if self.videos_completed >= len(self.videos):
+        if self.videos_completed >= self.length:
             self.videos_completed = 0
             self.epochs_completed += 1
             self.shuffle()
