@@ -7,12 +7,13 @@ LOGS_PATH = os.path.join(os.path.dirname(__file__), 'logs')
 
 
 class Trainer:
-    def __init__(self, network, dataset, epochs, learning_rate, evaluation_step=1, validation_set=None):
+    def __init__(self, network, dataset, epochs, learning_rate, evaluation_step=1, validation_set=None, verbose=False):
         self.network = network
         self.dataset = dataset
         self.epochs = epochs
         self.evaluation_step = evaluation_step
         self.validation_set = validation_set
+        self.verbose = verbose
         self.global_step = tf.get_variable('%s_global_step' % network.name, [], initializer=tf.constant_initializer(0),
                                            trainable=False)
         self.ground_truth = tf.placeholder(tf.int64, shape=[dataset.batch_size])
@@ -51,6 +52,9 @@ class Trainer:
             session.run(tf.global_variables_initializer())
 
             if checkpoint and checkpoint.model_checkpoint_path:
+                if self.verbose:
+                    print('Restoring the model...')
+
                 self.saver.restore(session, checkpoint.model_checkpoint_path)
 
             while True:
@@ -64,6 +68,9 @@ class Trainer:
                 feed_dict = {self.network.inputs: inputs, self.ground_truth: outputs}
 
                 if (batches_processed * self.dataset.batch_size) % (self.dataset.length * self.evaluation_step) == 0:
+                    if self.verbose:
+                        print('Processing epoch #%d...' % (epochs_processed + 1))
+
                     validation_accuracy = self.network.accuracy(self.validation_set.videos, self.validation_set.labels,
                                                                 self.validation_set.batch_size, session)
                     feed_dict[self.validation_accuracy] = validation_accuracy
