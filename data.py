@@ -9,7 +9,7 @@ from tqdm import tqdm
 class JesterDataSet:
     N_CLASSES = 27
 
-    def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=64,
+    def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=10,
                  cutoff=True, preload=True, dtype=np.float16, verbose=False,
                  data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
         """
