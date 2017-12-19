@@ -3,12 +3,14 @@ import numpy as np
 import pandas as pd
 import imageio as io
 
+from tqdm import tqdm
+
 
 class JesterDataSet:
     N_CLASSES = 27
 
     def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=64,
-                 cutoff=True, preload=True, dtype=np.float16,
+                 cutoff=True, preload=True, dtype=np.float16, verbose=False,
                  data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
         """
         Container for the 20BN-JESTER dataset. Note that both the data and the labels have to be downloaded manually
@@ -23,6 +25,9 @@ class JesterDataSet:
             shape: dimensions of the output videos, in a format (n_frames, height, width, n_channels)
             cutoff: True if the number of the videos should be a multiplier of the batch size (remaining images will
                 be discarded), False otherwise
+            preload: True if the whole dataset should be preloaded to the memory, False if each batch should be loaded
+                from the hard drive when required
+            verbose: True if the progress bar for loading the videos should be displayed, False otherwise
             data_path: directory containing the data
         """
         assert partition in ['train', 'validation', 'test']
@@ -35,6 +40,7 @@ class JesterDataSet:
         self.shape = shape
         self.batch_size = batch_size
         self.dtype = dtype
+        self.verbose = verbose
         self.data_path = data_path
         self.label_names = []
         self.label_dictionary = {}
@@ -141,7 +147,12 @@ class JesterDataSet:
     def load_videos(self, video_ids):
         videos = []
 
-        for video_id in video_ids:
+        if self.verbose:
+            iterator = tqdm(video_ids)
+        else:
+            iterator = video_ids
+
+        for video_id in iterator:
             videos.append(self.load_video(video_id))
 
         return np.array(videos, dtype=self.dtype)
