@@ -37,6 +37,7 @@ class JesterDataSet:
         assert 0 < proportion <= 1.0
         assert os.path.exists(data_path)
 
+        self.partition = partition
         self.shape = shape
         self.batch_size = batch_size
         self.dtype = dtype
@@ -148,6 +149,8 @@ class JesterDataSet:
         videos = []
 
         if self.verbose:
+            print('Loading the %s partition of the Jester dataset...' % self.partition)
+
             iterator = tqdm(video_ids)
         else:
             iterator = video_ids
