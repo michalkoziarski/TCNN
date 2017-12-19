@@ -40,6 +40,7 @@ class JesterDataSet:
         self.partition = partition
         self.shape = shape
         self.batch_size = batch_size
+        self.preload = preload
         self.dtype = dtype
         self.verbose = verbose
         self.data_path = data_path
@@ -146,19 +147,20 @@ class JesterDataSet:
         return video
 
     def load_videos(self, video_ids):
-        videos = []
+        iterator = range(len(video_ids))
 
-        if self.verbose:
+        if self.preload and self.verbose:
             print('Loading the %s partition of the Jester dataset...' % self.partition)
 
-            iterator = tqdm(video_ids)
-        else:
-            iterator = video_ids
+            iterator = tqdm(iterator)
 
-        for video_id in iterator:
-            videos.append(self.load_video(video_id))
+        videos = np.zeros([len(video_ids)] + list(self.shape), dtype=self.dtype)
 
-        return np.array(videos, dtype=self.dtype)
+        for i in iterator:
+            video_id = video_ids[i]
+            videos[i] = self.load_video(video_id)
+
+        return videos
 
     def batch(self):
         if self.videos is None:
