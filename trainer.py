@@ -71,9 +71,12 @@ class Trainer:
                     if self.verbose:
                         print('Processing epoch #%d...' % (epochs_processed + 1))
 
-                    validation_accuracy = self.network.accuracy(self.validation_set.videos, self.validation_set.labels,
-                                                                self.validation_set.batch_size, session)
-                    feed_dict[self.validation_accuracy] = validation_accuracy
+                    if self.validation_set is not None:
+                        validation_accuracy = self.network.accuracy(self.validation_set.videos,
+                                                                    self.validation_set.labels,
+                                                                    self.validation_set.batch_size, session)
+                        feed_dict[self.validation_accuracy] = validation_accuracy
+
                     _, summary = session.run([self.train_step, self.summary_step], feed_dict=feed_dict)
 
                     self.saver.save(session, self.checkpoint_path)
