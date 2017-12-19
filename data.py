@@ -8,7 +8,8 @@ class JesterDataSet:
     N_CLASSES = 27
 
     def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=64,
-                 cutoff=True, preload=True, data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
+                 cutoff=True, preload=True, dtype=np.float16,
+                 data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
         """
         Container for the 20BN-JESTER dataset. Note that both the data and the labels have to be downloaded manually
         into the directory specified as an argument. The data can be found at https://www.twentybn.com/datasets/jester.
@@ -33,6 +34,7 @@ class JesterDataSet:
 
         self.shape = shape
         self.batch_size = batch_size
+        self.dtype = dtype
         self.data_path = data_path
         self.label_names = []
         self.label_dictionary = {}
@@ -89,12 +91,7 @@ class JesterDataSet:
         self.shuffle()
 
         if preload:
-            self.videos = []
-
-            for video_id in self.video_ids:
-                self.videos.append(self.load_video(video_id))
-
-            self.videos = np.array(self.videos)
+            self.videos = self.load_videos(self.video_ids)
 
     def shuffle(self):
         indices = list(range(len(self.video_ids)))
@@ -128,7 +125,7 @@ class JesterDataSet:
         frames = []
 
         for frame_name in frame_names:
-            frames.append(np.array(io.imread(os.path.join(video_directory, frame_name))))
+            frames.append(np.array(io.imread(os.path.join(video_directory, frame_name)), dtype=self.dtype))
 
         video = np.stack(frames)
 
@@ -141,14 +138,17 @@ class JesterDataSet:
 
         return video
 
+    def load_videos(self, video_ids):
+        videos = []
+
+        for video_id in video_ids:
+            videos.append(self.load_video(video_id))
+
+        return np.array(videos, dtype=self.dtype)
+
     def batch(self):
         if self.videos is None:
-            videos = []
-
-            for video_id in self.video_ids[self.videos_completed:(self.videos_completed + self.batch_size)]:
-                videos.append(self.load_video(video_id))
-
-            videos = np.array(videos)
+            videos = self.load_videos(self.video_ids[self.videos_completed:(self.videos_completed + self.batch_size)])
         else:
             videos = self.videos[self.videos_completed:(self.videos_completed + self.batch_size)]
 
