@@ -8,7 +8,7 @@ class JesterDataSet:
     N_CLASSES = 27
 
     def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=64,
-                 cutoff=True, data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
+                 cutoff=True, preload=True, data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
         """
         Container for the 20BN-JESTER dataset. Note that both the data and the labels have to be downloaded manually
         into the directory specified as an argument. The data can be found at https://www.twentybn.com/datasets/jester.
@@ -88,12 +88,13 @@ class JesterDataSet:
 
         self.shuffle()
 
-        self.videos = []
+        if preload:
+            self.videos = []
 
-        for video_id in self.video_ids:
-            self.videos.append(self.load_video(video_id))
+            for video_id in self.video_ids:
+                self.videos.append(self.load_video(video_id))
 
-        self.videos = np.array(self.videos)
+            self.videos = np.array(self.videos)
 
     def shuffle(self):
         indices = list(range(len(self.video_ids)))
@@ -141,7 +142,16 @@ class JesterDataSet:
         return video
 
     def batch(self):
-        videos = self.videos[self.videos_completed:(self.videos_completed + self.batch_size)]
+        if self.videos is None:
+            videos = []
+
+            for video_id in self.video_ids[self.videos_completed:(self.videos_completed + self.batch_size)]:
+                videos.append(self.load_video(video_id))
+
+            videos = np.array(videos)
+        else:
+            videos = self.videos[self.videos_completed:(self.videos_completed + self.batch_size)]
+
         labels = self.labels[self.videos_completed:(self.videos_completed + self.batch_size)]
 
         self.videos_completed += self.batch_size
