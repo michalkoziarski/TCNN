@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import tensorflow as tf
 
 
@@ -7,12 +8,14 @@ LOGS_PATH = os.path.join(os.path.dirname(__file__), 'logs')
 
 
 class Trainer:
-    def __init__(self, network, dataset, epochs, learning_rate, evaluation_step=1, validation_set=None, verbose=False):
+    def __init__(self, network, dataset, epochs, learning_rate, evaluation_step=1, validation_set=None,
+                 early_stopping=False, verbose=False):
         self.network = network
         self.dataset = dataset
         self.epochs = epochs
         self.evaluation_step = evaluation_step
         self.validation_set = validation_set
+        self.early_stopping = early_stopping
         self.verbose = verbose
         self.global_step = tf.get_variable('%s_global_step' % network.name, [], initializer=tf.constant_initializer(0),
                                            trainable=False)
@@ -57,6 +60,8 @@ class Trainer:
 
                 self.saver.restore(session, checkpoint.model_checkpoint_path)
 
+            latest_accuracy = -np.inf
+
             while True:
                 batches_processed = tf.train.global_step(session, self.global_step)
                 epochs_processed = batches_processed * self.dataset.batch_size / self.dataset.length
@@ -75,6 +80,11 @@ class Trainer:
                         validation_accuracy = self.network.accuracy(self.validation_set.videos,
                                                                     self.validation_set.labels,
                                                                     self.validation_set.batch_size, session)
+
+                        if self.early_stopping and latest_accuracy > validation_accuracy:
+                            break
+
+                        latest_accuracy = validation_accuracy
                         feed_dict[self.validation_accuracy] = validation_accuracy
 
                     _, summary = session.run([self.train_step, self.summary_step], feed_dict=feed_dict)
