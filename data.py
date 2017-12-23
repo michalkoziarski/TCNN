@@ -178,3 +178,58 @@ class JesterDataSet:
             self.shuffle()
 
         return videos, labels
+
+
+class FlattenedJesterDataSet(JesterDataSet):
+    def __init__(self, axis, **kwargs):
+        super().__init__(**kwargs)
+
+        self.axis = axis
+        self.flattened_shape = (self.shape[axis],
+                                np.prod([self.shape[i] for i in range(3) if i != axis]),
+                                self.shape[-1])
+
+    def load_video(self, video_id):
+        video = super().load_video(video_id)
+
+        return self._flatten(video, self.axis)
+
+    def load_videos(self, video_ids):
+        iterator = range(len(video_ids))
+
+        if self.preload and self.verbose:
+            print('Loading the %s partition of the Jester dataset...' % self.partition)
+
+            iterator = tqdm(iterator)
+
+        videos = np.zeros([len(video_ids)] + list(self.flattened_shape), dtype=self.dtype)
+
+        for i in iterator:
+            video_id = video_ids[i]
+            videos[i] = self.load_video(video_id)
+
+        return videos
+
+    @staticmethod
+    def _flatten(tensor, axis):
+        assert len(tensor.shape) == 4
+
+        flattened_tensor = []
+
+        for i in range(tensor.shape[3]):
+            channel = tensor[:, :, :, i]
+
+            # roll axis order so that the first tensor dimension is the specified axis
+            channel = np.transpose(channel, (axis, (axis + 1) % 3, (axis + 2) % 3))
+
+            flattened_channel = np.zeros((channel.shape[0], channel.shape[1] * channel.shape[2]), dtype=channel.dtype)
+            position = 0
+
+            for k in range(channel.shape[2]):
+                for j in range(channel.shape[1]):
+                    flattened_channel[:, position] = channel[:, j, k]
+                    position += 1
+
+            flattened_tensor.append(flattened_channel)
+
+        return np.moveaxis(np.array(flattened_tensor), 0, -1)
