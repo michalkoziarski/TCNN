@@ -182,12 +182,12 @@ class JesterDataSet:
 
 class FlattenedJesterDataSet(JesterDataSet):
     def __init__(self, axis, **kwargs):
-        super().__init__(**kwargs)
-
         self.axis = axis
-        self.flattened_shape = (self.shape[axis],
-                                np.prod([self.shape[i] for i in range(3) if i != axis]),
-                                self.shape[-1])
+        self.flattened_shape = (kwargs['shape'][axis],
+                                np.prod([kwargs['shape'][i] for i in range(3) if i != axis]),
+                                kwargs['shape'][-1])
+        
+        super().__init__(**kwargs)
 
     def load_video(self, video_id):
         video = super().load_video(video_id)
