@@ -121,7 +121,7 @@ class C3DNetwork(Network):
 
     def setup(self):
         self.convolution3d('convolution_1', [3, 3, 3, 3, 64]).\
-            pooling3d('pooling_1', [1, 1, 2, 2, 1]).\
+            pooling3d('pooling_1', [1, 2, 2, 2, 1]).\
             convolution3d('convolution_2', [3, 3, 3, 64, 128]).\
             pooling3d('pooling_2', [1, 2, 2, 2, 1]).\
             convolution3d('convolution_3_1', [3, 3, 3, 128, 256]).\
@@ -134,6 +134,35 @@ class C3DNetwork(Network):
             convolution3d('convolution_5_2', [3, 3, 3, 512, 512]).\
             pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
             flatten().\
-            fully_connected('fully_connected_6', [-1, 4096], tf.nn.relu).\
-            fully_connected('fully_connected_7', [4096, 4096], tf.nn.relu).\
-            fully_connected('fully_connected_8', [4096, self.output_shape[0]])
+            fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
+            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
+            fully_connected('fully_connected_8', [2048, self.output_shape[0]])
+
+
+class C2DNetwork(Network):
+    def __init__(self, input_shape, output_shape, name='C2D'):
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+
+        inputs = tf.placeholder(tf.float32, shape=[None] + input_shape)
+
+        super().__init__(name, inputs)
+
+    def setup(self):
+        self.convolution2d('convolution_1', [3, 3, 3, 64]).\
+            pooling2d('pooling_1', [1, 2, 2, 1]).\
+            convolution2d('convolution_2', [3, 3, 64, 128]).\
+            pooling2d('pooling_2', [1, 2, 2, 1]).\
+            convolution2d('convolution_3_1', [3, 3, 128, 256]).\
+            convolution2d('convolution_3_2', [3, 3, 256, 256]).\
+            pooling2d('pooling_3', [1, 2, 2, 1]).\
+            convolution2d('convolution_4_1', [3, 3, 256, 512]).\
+            convolution2d('convolution_4_2', [3, 3, 512, 512]).\
+            pooling2d('pooling_4', [1, 2, 2, 1]).\
+            convolution2d('convolution_5_1', [3, 3, 512, 512]).\
+            convolution2d('convolution_5_2', [3, 3, 512, 512]).\
+            pooling2d('pooling_5', [1, 2, 2, 1]).\
+            flatten().\
+            fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
+            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
+            fully_connected('fully_connected_8', [2048, self.output_shape[0]])
