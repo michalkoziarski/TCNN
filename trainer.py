@@ -8,10 +8,10 @@ LOGS_PATH = os.path.join(os.path.dirname(__file__), 'logs')
 
 
 class Trainer:
-    def __init__(self, network, dataset, epochs, learning_rate, evaluation_step=1, validation_set=None,
+    def __init__(self, network, train_set, epochs, learning_rate, evaluation_step=1, validation_set=None,
                  early_stopping=False, verbose=False):
         self.network = network
-        self.dataset = dataset
+        self.train_set = train_set
         self.epochs = epochs
         self.evaluation_step = evaluation_step
         self.validation_set = validation_set
@@ -19,7 +19,7 @@ class Trainer:
         self.verbose = verbose
         self.global_step = tf.get_variable('%s_global_step' % network.name, [], initializer=tf.constant_initializer(0),
                                            trainable=False)
-        self.ground_truth = tf.placeholder(tf.int64, shape=[dataset.batch_size])
+        self.ground_truth = tf.placeholder(tf.int64, shape=[train_set.batch_size])
         self.base_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.ground_truth,
                                                                                        logits=network.outputs))
         self.weight_decay_loss = tf.reduce_mean(tf.get_collection('%s_weight_decay' % self.network.name))
@@ -64,15 +64,15 @@ class Trainer:
 
             while True:
                 batches_processed = tf.train.global_step(session, self.global_step)
-                epochs_processed = batches_processed * self.dataset.batch_size / self.dataset.length
+                epochs_processed = batches_processed * self.train_set.batch_size / self.train_set.length
 
                 if epochs_processed >= self.epochs:
                     break
 
-                inputs, outputs = self.dataset.batch()
+                inputs, outputs = self.train_set.batch()
                 feed_dict = {self.network.inputs: inputs, self.ground_truth: outputs}
 
-                if (batches_processed * self.dataset.batch_size) % (self.dataset.length * self.evaluation_step) == 0:
+                if (batches_processed * self.train_set.batch_size) % (self.train_set.length * self.evaluation_step) == 0:
                     if self.verbose:
                         print('Processing epoch #%d...' % (epochs_processed + 1))
 
