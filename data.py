@@ -186,7 +186,7 @@ class FlattenedJesterDataSet(JesterDataSet):
         self.flattened_shape = (kwargs['shape'][axis],
                                 np.prod([kwargs['shape'][i] for i in range(3) if i != axis]),
                                 kwargs['shape'][-1])
-        
+
         super().__init__(**kwargs)
 
     def load_video(self, video_id):
