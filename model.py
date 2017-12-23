@@ -115,7 +115,7 @@ class C3DNetwork(Network):
         self.input_shape = input_shape
         self.output_shape = output_shape
 
-        inputs = tf.placeholder(tf.float32, shape=[None] + input_shape)
+        inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
 
         super().__init__(name, inputs)
 
@@ -144,7 +144,7 @@ class C2DNetwork(Network):
         self.input_shape = input_shape
         self.output_shape = output_shape
 
-        inputs = tf.placeholder(tf.float32, shape=[None] + input_shape)
+        inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
 
         super().__init__(name, inputs)
 
