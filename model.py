@@ -73,7 +73,7 @@ class Network(ABC):
         if initializer is None:
             initializer = tf.contrib.layers.xavier_initializer()
 
-        variable = tf.get_variable(variable_name, shape, initializer=initializer)
+        variable = tf.get_variable('%s_%s' % (self.name, variable_name), shape, initializer=initializer)
 
         if weight_decay is not None:
             tf.add_to_collection('%s_weight_decay' % self.name, tf.nn.l2_loss(variable) * weight_decay)
