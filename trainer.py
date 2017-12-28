@@ -35,14 +35,14 @@ class Trainer:
         self.train_step = self.optimizer.minimize(self.total_loss, global_step=self.global_step)
         self.saver = tf.train.Saver()
 
-        tf.summary.scalar('base loss', self.base_loss)
-        tf.summary.scalar('weight decay loss', self.weight_decay_loss)
-        tf.summary.scalar('total loss', self.total_loss)
+        tf.summary.scalar('base_loss', self.base_loss)
+        tf.summary.scalar('weight_decay_loss', self.weight_decay_loss)
+        tf.summary.scalar('total_loss', self.total_loss)
 
         if validation_set is not None:
             self.validation_accuracy = tf.placeholder(tf.float32)
 
-            tf.summary.scalar('validation accuracy', self.validation_accuracy)
+            tf.summary.scalar('validation_accuracy', self.validation_accuracy)
 
         self.summary_step = tf.summary.merge_all()
 
