@@ -5,9 +5,11 @@ from abc import ABC, abstractmethod
 
 
 class Network(ABC):
-    def __init__(self, name, inputs):
+    def __init__(self, input_shape, output_shape, name):
+        self.input_shape = input_shape
+        self.output_shape = output_shape
         self.name = name
-        self.inputs = inputs
+        self.inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
         self.outputs = self.inputs
         self.setup()
 
@@ -111,14 +113,6 @@ class Network(ABC):
 
 
 class C3DNetwork(Network):
-    def __init__(self, input_shape, output_shape, name='C3D'):
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-
-        inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
-
-        super().__init__(name, inputs)
-
     def setup(self):
         self.convolution3d('convolution_1', [3, 3, 3, 3, 64]).\
             pooling3d('pooling_1', [1, 1, 2, 2, 1]).\
@@ -140,14 +134,6 @@ class C3DNetwork(Network):
 
 
 class C2DNetwork(Network):
-    def __init__(self, input_shape, output_shape, name='C2D'):
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-
-        inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
-
-        super().__init__(name, inputs)
-
     def setup(self):
         self.convolution2d('convolution_1', [3, 3, 3, 64]).\
             pooling2d('pooling_1', [1, 1, 4, 1]).\
