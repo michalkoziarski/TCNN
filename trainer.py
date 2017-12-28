@@ -19,8 +19,12 @@ class Trainer:
         self.validation_set = validation_set
         self.early_stopping = early_stopping
         self.verbose = verbose
-        self.global_step = tf.get_variable('%s_global_step' % network.name, [], initializer=tf.constant_initializer(0),
+        self.global_step = tf.get_variable('%s_global_step' % network.name, [],
+                                           initializer=tf.constant_initializer(0),
                                            trainable=False)
+        self.latest_accuracy = tf.get_variable('%s_latest_accuracy' % network.name, [],
+                                               initializer=tf.constant_initializer(-np.inf),
+                                               trainable=False)
         self.ground_truth = tf.placeholder(tf.int64, shape=[train_set.batch_size])
         self.base_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.ground_truth,
                                                                                        logits=network.outputs))
@@ -62,10 +66,8 @@ class Trainer:
 
                 self.saver.restore(session, checkpoint.model_checkpoint_path)
 
-            latest_accuracy = -np.inf
-
-            batches_per_epoch = int(self.train_set.length / self.train_set.batch_size)
             batches_processed = tf.train.global_step(session, self.global_step)
+            batches_per_epoch = int(self.train_set.length / self.train_set.batch_size)
             epochs_processed = int(batches_processed / batches_per_epoch)
 
             for epoch in range(epochs_processed, self.epochs):
@@ -91,10 +93,16 @@ class Trainer:
                                                                 self.validation_set.batch_size,
                                                                 session, verbose=self.verbose)
 
-                    if self.early_stopping and latest_accuracy > validation_accuracy:
+                    if self.early_stopping and session.run(self.latest_accuracy) > validation_accuracy:
+                        session.run(self.latest_accuracy.assign(validation_accuracy))
+
+                        if self.verbose:
+                            print('Stopping the training early.')
+
                         break
 
-                    latest_accuracy = validation_accuracy
+                    session.run(self.latest_accuracy.assign(validation_accuracy))
+
                     feed_dict[self.validation_accuracy] = validation_accuracy
 
                 _, summary = session.run([self.train_step, self.summary_step], feed_dict=feed_dict)
