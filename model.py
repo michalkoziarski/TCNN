@@ -93,47 +93,24 @@ class Network(ABC):
         if restore:
             self.restore(session)
 
-        predictions = np.full(len(inputs), np.nan)
-        position = 0
+        probabilities = np.full((len(inputs), self.output_shape[0]), np.nan)
 
-        while position < len(inputs):
+        iterator = range(0, len(inputs), batch_size)
+
+        for position in iterator:
             batch = inputs[position:(position + batch_size)]
-            batch_predictions = tf.argmax(self.outputs, 1).eval(feed_dict={self.inputs: batch}, session=session)
-            predictions[position:(position + batch_size)] = batch_predictions
-            position += batch_size
+            batch_probabilities = tf.nn.softmax(self.outputs).eval(feed_dict={self.inputs: batch}, session=session)
+            probabilities[position:(position + batch_size)] = batch_probabilities
 
         if not session_passed:
             session.close()
 
-        return predictions
+        return probabilities
 
     def accuracy(self, inputs, ground_truth, batch_size, session=None, restore=False):
         predictions = self.predict(inputs, batch_size, session, restore)
 
-        return np.mean(predictions == ground_truth)
-
-    def probabilities(self, inputs, batch_size, session=None, restore=False):
-        session_passed = session is not None
-
-        if not session_passed:
-            session = tf.Session()
-
-        if restore:
-            self.restore(session)
-
-        predictions = np.full((len(inputs), self.output_shape[0]), np.nan)
-        position = 0
-
-        while position < len(inputs):
-            batch = inputs[position:(position + batch_size)]
-            batch_predictions = tf.nn.softmax(self.outputs).eval(feed_dict={self.inputs: batch}, session=session)
-            predictions[position:(position + batch_size)] = batch_predictions
-            position += batch_size
-
-        if not session_passed:
-            session.close()
-
-        return predictions
+        return np.mean(np.argmax(predictions, 1) == ground_truth)
 
     def restore(self, session, model_path=None):
         if model_path is None:
