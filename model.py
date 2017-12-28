@@ -1,7 +1,9 @@
+import os
 import numpy as np
 import tensorflow as tf
 
 from abc import ABC, abstractmethod
+from trainer import MODELS_PATH
 
 
 class Network(ABC):
@@ -82,11 +84,14 @@ class Network(ABC):
 
         return variable
 
-    def predict(self, inputs, batch_size, session=None):
+    def predict(self, inputs, batch_size, session=None, restore=False):
         session_passed = session is not None
 
         if not session_passed:
             session = tf.Session()
+
+        if restore:
+            self.restore(session)
 
         predictions = np.full(len(inputs), np.nan)
         position = 0
@@ -102,16 +107,19 @@ class Network(ABC):
 
         return predictions
 
-    def accuracy(self, inputs, ground_truth, batch_size, session=None):
-        predictions = self.predict(inputs, batch_size, session)
+    def accuracy(self, inputs, ground_truth, batch_size, session=None, restore=False):
+        predictions = self.predict(inputs, batch_size, session, restore)
 
         return np.mean(predictions == ground_truth)
 
-    def probabilities(self, inputs, batch_size, session=None):
+    def probabilities(self, inputs, batch_size, session=None, restore=False):
         session_passed = session is not None
 
         if not session_passed:
             session = tf.Session()
+
+        if restore:
+            self.restore(session)
 
         predictions = np.full((len(inputs), self.output_shape[0]), np.nan)
         position = 0
@@ -126,6 +134,17 @@ class Network(ABC):
             session.close()
 
         return predictions
+
+    def restore(self, session, model_path=None):
+        if model_path is None:
+            model_path = os.path.join(MODELS_PATH, self.name)
+
+        checkpoint = tf.train.get_checkpoint_state(model_path)
+
+        assert checkpoint
+        assert checkpoint.model_checkpoint_path
+
+        tf.train.Saver().restore(session, checkpoint.model_checkpoint_path)
 
     @abstractmethod
     def setup(self):
