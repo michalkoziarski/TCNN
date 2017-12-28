@@ -107,6 +107,26 @@ class Network(ABC):
 
         return np.mean(predictions == ground_truth)
 
+    def probabilities(self, inputs, batch_size, session=None):
+        session_passed = session is not None
+
+        if not session_passed:
+            session = tf.Session()
+
+        predictions = np.full((len(inputs), self.output_shape[0]), np.nan)
+        position = 0
+
+        while position < len(inputs):
+            batch = inputs[position:(position + batch_size)]
+            batch_predictions = tf.nn.softmax(self.outputs).eval(feed_dict={self.inputs: batch}, session=session)
+            predictions[position:(position + batch_size)] = batch_predictions
+            position += batch_size
+
+        if not session_passed:
+            session.close()
+
+        return predictions
+
     @abstractmethod
     def setup(self):
         pass
