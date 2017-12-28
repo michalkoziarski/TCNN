@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from abc import ABC, abstractmethod
+from tqdm import tqdm
 from trainer import MODELS_PATH
 
 
@@ -84,7 +85,7 @@ class Network(ABC):
 
         return variable
 
-    def predict(self, inputs, batch_size, session=None, restore=False):
+    def predict(self, inputs, batch_size, session=None, restore=False, verbose=False):
         session_passed = session is not None
 
         if not session_passed:
@@ -97,6 +98,11 @@ class Network(ABC):
 
         iterator = range(0, len(inputs), batch_size)
 
+        if verbose:
+            print('Evaluating the model...')
+
+            iterator = tqdm(iterator)
+
         for position in iterator:
             batch = inputs[position:(position + batch_size)]
             batch_probabilities = tf.nn.softmax(self.outputs).eval(feed_dict={self.inputs: batch}, session=session)
@@ -107,8 +113,8 @@ class Network(ABC):
 
         return probabilities
 
-    def accuracy(self, inputs, ground_truth, batch_size, session=None, restore=False):
-        predictions = self.predict(inputs, batch_size, session, restore)
+    def accuracy(self, inputs, ground_truth, batch_size, session=None, restore=False, verbose=False):
+        predictions = self.predict(inputs, batch_size, session, restore, verbose)
 
         return np.mean(np.argmax(predictions, 1) == ground_truth)
 

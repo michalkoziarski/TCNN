@@ -79,7 +79,8 @@ class Trainer:
                     if self.validation_set is not None:
                         validation_accuracy = self.network.accuracy(self.validation_set.videos,
                                                                     self.validation_set.labels,
-                                                                    self.validation_set.batch_size, session)
+                                                                    self.validation_set.batch_size,
+                                                                    session, verbose=self.verbose)
 
                         if self.early_stopping and latest_accuracy > validation_accuracy:
                             break
