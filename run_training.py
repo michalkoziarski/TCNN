@@ -45,6 +45,12 @@ else:
 
 train_set = DataSet(partition='train', preload=False, **dataset_params)
 validation_set = DataSet(partition='validation', preload=True, **dataset_params)
-network = Network(input_shape=train_set.flattened_shape, output_shape=[train_set.N_CLASSES], name=params['name'])
+
+if params['network'] == 'C2D':
+    input_shape = train_set.flattened_shape
+else:
+    input_shape = train_set.shape
+
+network = Network(input_shape=input_shape, output_shape=[train_set.N_CLASSES], name=params['name'])
 trainer = Trainer(network, train_set, validation_set=validation_set, **trainer_params)
 trainer.train()
