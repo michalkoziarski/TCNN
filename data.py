@@ -63,14 +63,14 @@ class JesterDataSet:
 
         assert os.path.exists(self.data_path)
 
-        df = pd.read_csv(os.path.join(data_path, 'jester-v1-labels.csv'), header=None)
+        df = pd.read_csv(os.path.join(self.data_path, 'jester-v1-labels.csv'), header=None)
 
         self.label_names = list(df.loc[classes, 0])
 
         for cls in range(len(classes)):
             self.label_dictionary[self.label_names[cls]] = cls
 
-        df = pd.read_csv(os.path.join(data_path, 'jester-v1-%s.csv' % partition), header=None, delimiter=';')
+        df = pd.read_csv(os.path.join(self.data_path, 'jester-v1-%s.csv' % partition), header=None, delimiter=';')
 
         if partition in ['train', 'validation']:
             grouped_video_ids = {}
