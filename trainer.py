@@ -2,6 +2,8 @@ import os
 import numpy as np
 import tensorflow as tf
 
+from tqdm import tqdm
+
 
 MODELS_PATH = os.path.join(os.path.dirname(__file__), 'models')
 LOGS_PATH = os.path.join(os.path.dirname(__file__), 'logs')
@@ -62,35 +64,40 @@ class Trainer:
 
             latest_accuracy = -np.inf
 
-            while True:
-                batches_processed = tf.train.global_step(session, self.global_step)
-                epochs_processed = batches_processed * self.train_set.batch_size / self.train_set.length
+            batches_per_epoch = int(self.train_set.length / self.train_set.batch_size)
+            batches_processed = tf.train.global_step(session, self.global_step)
+            epochs_processed = int(batches_processed / batches_per_epoch)
 
-                if epochs_processed >= self.epochs:
-                    break
+            for epoch in range(epochs_processed, self.epochs):
+                if self.verbose:
+                    print('Processing epoch #%d...' % (epoch + 1))
+
+                batch_iterator = range(0, batches_per_epoch - 1)
+
+                if self.verbose:
+                    batch_iterator = tqdm(batch_iterator)
+
+                for _ in batch_iterator:
+                    inputs, outputs = self.train_set.batch()
+                    feed_dict = {self.network.inputs: inputs, self.ground_truth: outputs}
+                    session.run([self.train_step], feed_dict=feed_dict)
 
                 inputs, outputs = self.train_set.batch()
                 feed_dict = {self.network.inputs: inputs, self.ground_truth: outputs}
 
-                if (batches_processed * self.train_set.batch_size) % (self.train_set.length * self.evaluation_step) == 0:
-                    if self.verbose:
-                        print('Processing epoch #%d...' % (epochs_processed + 1))
+                if self.validation_set is not None:
+                    validation_accuracy = self.network.accuracy(self.validation_set.videos,
+                                                                self.validation_set.labels,
+                                                                self.validation_set.batch_size,
+                                                                session, verbose=self.verbose)
 
-                    if self.validation_set is not None:
-                        validation_accuracy = self.network.accuracy(self.validation_set.videos,
-                                                                    self.validation_set.labels,
-                                                                    self.validation_set.batch_size,
-                                                                    session, verbose=self.verbose)
+                    if self.early_stopping and latest_accuracy > validation_accuracy:
+                        break
 
-                        if self.early_stopping and latest_accuracy > validation_accuracy:
-                            break
+                    latest_accuracy = validation_accuracy
+                    feed_dict[self.validation_accuracy] = validation_accuracy
 
-                        latest_accuracy = validation_accuracy
-                        feed_dict[self.validation_accuracy] = validation_accuracy
+                _, summary = session.run([self.train_step, self.summary_step], feed_dict=feed_dict)
 
-                    _, summary = session.run([self.train_step, self.summary_step], feed_dict=feed_dict)
-
-                    self.saver.save(session, self.checkpoint_path)
-                    self.summary_writer.add_summary(summary, epochs_processed)
-                else:
-                    session.run([self.train_step], feed_dict=feed_dict)
+                self.saver.save(session, self.checkpoint_path)
+                self.summary_writer.add_summary(summary, epochs_processed)
