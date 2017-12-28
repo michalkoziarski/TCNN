@@ -1,9 +1,12 @@
+import logging
 import argparse
 
 from model import C2DNetwork, C3DNetwork
 from data import JesterDataSet, FlattenedJesterDataSet
 from trainer import Trainer
 
+
+logging.basicConfig(level=logging.INFO)
 
 params = {
     'network': 'C2D',

@@ -1,4 +1,5 @@
 import os
+import logging
 import numpy as np
 import pandas as pd
 import imageio as io
@@ -154,7 +155,7 @@ class JesterDataSet:
         iterator = range(len(video_ids))
 
         if self.preload and self.verbose:
-            print('Loading the %s partition of the Jester dataset...' % self.partition)
+            logging.info('Loading the %s partition of the Jester dataset...' % self.partition)
 
             iterator = tqdm(iterator)
 
@@ -202,7 +203,7 @@ class FlattenedJesterDataSet(JesterDataSet):
         iterator = range(len(video_ids))
 
         if self.preload and self.verbose:
-            print('Loading the %s partition of the Jester dataset...' % self.partition)
+            logging.info('Loading the %s partition of the Jester dataset...' % self.partition)
 
             iterator = tqdm(iterator)
 

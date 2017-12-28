@@ -1,4 +1,5 @@
 import os
+import logging
 import numpy as np
 import tensorflow as tf
 
@@ -99,7 +100,7 @@ class Network(ABC):
         iterator = range(0, len(inputs), batch_size)
 
         if verbose:
-            print('Evaluating the model...')
+            logging.info('Evaluating the model...')
 
             iterator = tqdm(iterator)
 

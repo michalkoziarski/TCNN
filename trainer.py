@@ -1,4 +1,5 @@
 import os
+import logging
 import numpy as np
 import tensorflow as tf
 
@@ -62,7 +63,7 @@ class Trainer:
 
             if checkpoint and checkpoint.model_checkpoint_path:
                 if self.verbose:
-                    print('Restoring the model...')
+                    logging.info('Restoring the model...')
 
                 self.saver.restore(session, checkpoint.model_checkpoint_path)
 
@@ -72,7 +73,7 @@ class Trainer:
 
             for epoch in range(epochs_processed, self.epochs):
                 if self.verbose:
-                    print('Processing epoch #%d...' % (epoch + 1))
+                    logging.info('Processing epoch #%d...' % (epoch + 1))
 
                 batch_iterator = range(0, batches_per_epoch - 1)
 
@@ -97,7 +98,7 @@ class Trainer:
                         session.run(self.latest_accuracy.assign(validation_accuracy))
 
                         if self.verbose:
-                            print('Stopping the training early.')
+                            logging.info('Stopping the training early.')
 
                         break
 
