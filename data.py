@@ -8,10 +8,10 @@ from tqdm import tqdm
 
 class JesterDataSet:
     N_CLASSES = 27
+    DEFAULT_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')
 
     def __init__(self, partition='train', classes=None, proportion=1.0, shape=(30, 100, 100, 3), batch_size=10,
-                 cutoff=True, preload=True, dtype=np.float16, verbose=False,
-                 data_path=os.path.join(os.path.dirname(__file__), 'data', '20BN-JESTER')):
+                 cutoff=True, preload=True, dtype=np.float16, verbose=False, data_path=None):
         """
         Container for the 20BN-JESTER dataset. Note that both the data and the labels have to be downloaded manually
         into the directory specified as an argument. The data can be found at https://www.twentybn.com/datasets/jester.
@@ -28,14 +28,13 @@ class JesterDataSet:
             preload: True if the whole dataset should be preloaded to the memory, False if each batch should be loaded
                 from the hard drive when required
             verbose: True if the progress bar for loading the videos should be displayed, False otherwise
-            data_path: directory containing the data
+            data_path: directory containing the data, falls back to the default value if None
         """
         assert partition in ['train', 'validation', 'test']
         assert classes is None \
                or (type(classes) is int and classes <= self.N_CLASSES) \
                or (min(classes) >= 0 and max(classes) < self.N_CLASSES)
         assert 0 < proportion <= 1.0
-        assert os.path.exists(data_path)
 
         self.partition = partition
         self.shape = shape
@@ -57,6 +56,11 @@ class JesterDataSet:
             classes = range(0, 27)
         elif type(classes) is int:
             classes = range(0, classes)
+
+        if self.data_path is None:
+            self.data_path = self.DEFAULT_DATA_PATH
+
+        assert os.path.exists(self.data_path)
 
         df = pd.read_csv(os.path.join(data_path, 'jester-v1-labels.csv'), header=None)
 
