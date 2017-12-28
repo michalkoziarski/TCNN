@@ -8,31 +8,22 @@ from trainer import Trainer
 
 logging.basicConfig(level=logging.INFO)
 
-params = {
-    'network': 'C2D',
-    'axis': 0,
-    'name': None,
-    'learning_rate': 0.0001,
-    'batch_size': 10,
-    'epochs': 20,
-    'shape': [30, 100, 100, 3],
-    'verbose': True,
-    'data_path': None,
-    'early_stopping': True,
-    'proportion': 1.0,
-    'classes': None
-}
-
 parser = argparse.ArgumentParser()
 
-for k in params.keys():
-    parser.add_argument('-%s' % k)
+parser.add_argument('-network', type=str, choices=['C2D', 'C3D'], required=True)
+parser.add_argument('-axis', type=int, choices=[0, 1, 2])
+parser.add_argument('-name', type=str)
+parser.add_argument('-learning_rate', type=float, default=0.0001)
+parser.add_argument('-batch_size', type=int, default=10)
+parser.add_argument('-epochs', type=int, default=20)
+parser.add_argument('-shape', type=list, default=[30, 100, 100, 3])
+parser.add_argument('-verbose', type=bool, default=True)
+parser.add_argument('-data_path', type=str)
+parser.add_argument('-early_stopping', type=bool, default=True)
+parser.add_argument('-proportion', type=float, default=1.0)
+parser.add_argument('-classes', type=int)
 
-args = vars(parser.parse_args())
-
-for k, v in params.items():
-    if args.get(k) is not None:
-        params[k] = eval(args.get(k))
+params = vars(parser.parse_args())
 
 if params['name'] is None:
     params['name'] = params['network']
