@@ -9,11 +9,17 @@ from trainer import MODELS_PATH
 
 
 class Network(ABC):
-    def __init__(self, input_shape, output_shape, name):
-        self.input_shape = input_shape
-        self.output_shape = output_shape
+    def __init__(self, name, output_shape, input_shape=None, inputs=None):
+        assert inputs is not None or input_shape is not None
+
         self.name = name
-        self.inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
+        self.output_shape = output_shape
+
+        if inputs is not None:
+            self.inputs = inputs
+        else:
+            self.inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
+
         self.outputs = self.inputs
         self.setup()
 
