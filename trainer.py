@@ -89,10 +89,7 @@ class Trainer:
                 feed_dict = {self.network.inputs: inputs, self.ground_truth: outputs}
 
                 if self.validation_set is not None:
-                    validation_accuracy = self.network.accuracy(self.validation_set.videos,
-                                                                self.validation_set.labels,
-                                                                self.validation_set.batch_size,
-                                                                session, verbose=self.verbose)
+                    validation_accuracy = self.network.accuracy(self.validation_set, session, verbose=self.verbose)
 
                     if self.early_stopping and session.run(self.latest_accuracy) > validation_accuracy:
                         session.run(self.latest_accuracy.assign(validation_accuracy))

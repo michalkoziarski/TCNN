@@ -92,7 +92,7 @@ class Network(ABC):
 
         return variable
 
-    def predict(self, inputs, batch_size, session=None, restore=False, verbose=False):
+    def predict(self, dataset, session=None, restore=False, verbose=False):
         session_passed = session is not None
 
         if not session_passed:
@@ -101,9 +101,9 @@ class Network(ABC):
         if restore:
             self.restore(session)
 
-        probabilities = np.full((len(inputs), self.output_shape[0]), np.nan)
+        probabilities = np.full((dataset.length, self.output_shape[0]), np.nan)
 
-        iterator = range(0, len(inputs), batch_size)
+        iterator = range(0, dataset.length, dataset.batch_size)
 
         if verbose:
             logging.info('Evaluating the model...')
@@ -111,19 +111,19 @@ class Network(ABC):
             iterator = tqdm(iterator)
 
         for position in iterator:
-            batch = inputs[position:(position + batch_size)]
+            batch, _ = dataset.batch()
             batch_probabilities = tf.nn.softmax(self.outputs).eval(feed_dict={self.inputs: batch}, session=session)
-            probabilities[position:(position + batch_size)] = batch_probabilities
+            probabilities[position:(position + dataset.batch_size)] = batch_probabilities
 
         if not session_passed:
             session.close()
 
         return probabilities
 
-    def accuracy(self, inputs, ground_truth, batch_size, session=None, restore=False, verbose=False):
-        predictions = self.predict(inputs, batch_size, session, restore, verbose)
+    def accuracy(self, dataset, session=None, restore=False, verbose=False):
+        predictions = self.predict(dataset, session, restore, verbose)
 
-        return np.mean(np.argmax(predictions, 1) == ground_truth)
+        return np.mean(np.argmax(predictions, 1) == dataset.outputs)
 
     def restore(self, session, model_path=None):
         if model_path is None:
