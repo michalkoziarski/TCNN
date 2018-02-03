@@ -94,6 +94,9 @@ class Trainer:
                 if self.validation_set is not None:
                     validation_accuracy = self.network.accuracy(self.validation_set, session, verbose=self.verbose)
 
+                    if self.verbose:
+                        logging.info('Observed %.4f validation accuracy.' % validation_accuracy)
+
                     if self.early_stopping and session.run(self.latest_accuracy) > validation_accuracy:
                         session.run(self.latest_accuracy.assign(validation_accuracy))
 
