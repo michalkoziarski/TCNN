@@ -103,9 +103,10 @@ class JesterDataSet:
         if preload:
             self.videos = self.load_videos(self.video_ids)
 
-    def shuffle(self):
-        indices = list(range(len(self.video_ids)))
-        np.random.shuffle(indices)
+    def shuffle(self, indices=None):
+        if indices is None:
+            indices = list(range(len(self.video_ids)))
+            np.random.shuffle(indices)
 
         self.video_ids = self.video_ids[indices]
 
@@ -233,3 +234,40 @@ class FlattenedJesterDataSet(JesterDataSet):
             flattened_tensor.append(flattened_channel)
 
         return np.moveaxis(np.array(flattened_tensor), 0, -1)
+
+
+class MultiStreamJesterDataSet:
+    def __init__(self, **kwargs):
+        self.datasets = []
+        self.datasets.append(JesterDataSet(**kwargs))
+
+        for axis in range(3):
+            self.datasets.append(FlattenedJesterDataSet(axis=axis, **kwargs))
+
+        self.batch_size = self.datasets[0].batch_size
+        self.length = self.datasets[0].length
+        self.labels = self.datasets[0].labels
+        self.shape = np.prod(self.datasets[0].shape)
+
+    def batch(self):
+        inputs = []
+        outputs = None
+
+        for dataset in self.datasets:
+            batch_inputs, batch_outputs = dataset.batch()
+
+            inputs.append(np.reshape(batch_inputs, [-1, 1] + list(self.shape)))
+
+            if outputs is None:
+                outputs = batch_outputs
+
+            assert outputs == batch_outputs
+
+        return np.concatenate(inputs, axis=1), outputs
+
+    def shuffle(self):
+        indices = list(range(self.length))
+        np.random.shuffle(indices)
+
+        for dataset in self.datasets:
+            dataset.shuffle(indices)
