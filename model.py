@@ -181,3 +181,62 @@ class C2DNetwork(Network):
             fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
             fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
             fully_connected('fully_connected_8', [2048, self.output_shape[0]])
+
+
+class Single3DStream(Network):
+    def setup(self):
+        self.convolution3d('convolution_1', [3, 3, 3, 3, 64]).\
+            pooling3d('pooling_1', [1, 1, 2, 2, 1]).\
+            convolution3d('convolution_2', [3, 3, 3, 64, 128]).\
+            pooling3d('pooling_2', [1, 2, 2, 2, 1]).\
+            convolution3d('convolution_3_1', [3, 3, 3, 128, 256]).\
+            convolution3d('convolution_3_2', [3, 3, 3, 256, 256]).\
+            pooling3d('pooling_3', [1, 2, 2, 2, 1]).\
+            convolution3d('convolution_4_1', [3, 3, 3, 256, 512]).\
+            convolution3d('convolution_4_2', [3, 3, 3, 512, 512]).\
+            pooling3d('pooling_4', [1, 2, 2, 2, 1]).\
+            convolution3d('convolution_5_1', [3, 3, 3, 512, 512]).\
+            convolution3d('convolution_5_2', [3, 3, 3, 512, 512]).\
+            pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
+            flatten()
+
+
+class Single2DStream(Network):
+    def setup(self):
+        self.convolution2d('convolution_1', [3, 3, 3, 64]).\
+            pooling2d('pooling_1', [1, 1, 4, 1]).\
+            convolution2d('convolution_2', [3, 3, 64, 128]).\
+            pooling2d('pooling_2', [1, 2, 4, 1]).\
+            convolution2d('convolution_3_1', [3, 3, 128, 256]).\
+            convolution2d('convolution_3_2', [3, 3, 256, 256]).\
+            pooling2d('pooling_3', [1, 2, 4, 1]).\
+            convolution2d('convolution_4_1', [3, 3, 256, 512]).\
+            convolution2d('convolution_4_2', [3, 3, 512, 512]).\
+            pooling2d('pooling_4', [1, 2, 4, 1]).\
+            convolution2d('convolution_5_1', [3, 3, 512, 512]).\
+            convolution2d('convolution_5_2', [3, 3, 512, 512]).\
+            pooling2d('pooling_5', [1, 2, 4, 1]).\
+            flatten()
+
+
+class MultiStreamNetwork(Network):
+    def __init__(self, name, output_shape, input_shape):
+        assert len(input_shape) == 4
+
+        self.name = name
+        self.output_shape = output_shape
+        self.inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
+        self.streams = []
+
+        self.streams.append(Single3DStream('%s_C3D_Stream' % self.name, None, inputs=self.inputs[:, 0]))
+
+        for i in range(3):
+            self.streams.append(Single2DStream('%s_C2D_%d_Stream' % (self.name, i), None, inputs=self.inputs[:, i + 1]))
+
+        self.outputs = tf.concat([stream.outputs for stream in self.streams], 1)
+        self.setup()
+
+    def setup(self):
+        self.fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
+            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
+            fully_connected('fully_connected_8', [2048, self.output_shape[0]])
