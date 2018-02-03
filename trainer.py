@@ -74,6 +74,9 @@ class Trainer:
             for epoch in range(epochs_processed, self.epochs):
                 if self.verbose:
                     logging.info('Processing epoch #%d...' % (epoch + 1))
+                    logging.info('Shuffling training set...')
+
+                self.train_set.shuffle()
 
                 batch_iterator = range(0, batches_per_epoch - 1)
 

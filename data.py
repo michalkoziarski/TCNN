@@ -50,7 +50,6 @@ class JesterDataSet:
         self.video_ids = []
         self.videos = None
         self.videos_completed = 0
-        self.epochs_completed = 0
         self.length = 0
 
         if classes is None:
@@ -100,8 +99,6 @@ class JesterDataSet:
 
             if self.labels is not None:
                 self.labels = self.labels[:self.length]
-
-        self.shuffle()
 
         if preload:
             self.videos = self.load_videos(self.video_ids)
@@ -179,8 +176,6 @@ class JesterDataSet:
 
         if self.videos_completed >= self.length:
             self.videos_completed = 0
-            self.epochs_completed += 1
-            self.shuffle()
 
         return videos, labels
 
