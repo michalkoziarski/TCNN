@@ -237,6 +237,8 @@ class FlattenedJesterDataSet(JesterDataSet):
 
 
 class MultiStreamJesterDataSet:
+    N_CLASSES = JesterDataSet.N_CLASSES
+
     def __init__(self, **kwargs):
         self.datasets = []
         self.datasets.append(JesterDataSet(**kwargs))
@@ -249,11 +251,11 @@ class MultiStreamJesterDataSet:
         self.labels = self.datasets[0].labels
         self.shape = np.prod(self.datasets[0].shape)
 
-        self.input_shapes = []
-        self.input_shapes.append(self.datasets[0].shape)
+        self.input_shape = []
+        self.input_shape.append(self.datasets[0].shape)
 
         for dataset in self.datasets[1:]:
-            self.input_shapes.append(dataset.flattened_shape)
+            self.input_shape.append(dataset.flattened_shape)
 
     def batch(self):
         inputs = []

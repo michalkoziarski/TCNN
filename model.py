@@ -220,19 +220,19 @@ class Single2DStream(Network):
 
 
 class MultiStreamNetwork(Network):
-    def __init__(self, name, output_shape, input_shapes):
-        assert len(input_shapes) == 4
+    def __init__(self, name, output_shape, input_shape):
+        assert len(input_shape) == 4
 
         self.name = name
         self.output_shape = output_shape
-        self.input_shapes = input_shapes
-        self.flat_shape = np.prod(self.input_shapes[0])
+        self.input_shape = input_shape
+        self.flat_shape = np.prod(self.input_shape[0])
         self.inputs = tf.placeholder(tf.float32, shape=[None, 4] + list(self.flat_shape))
 
         self.stream_inputs = []
 
         for i in range(4):
-            self.stream_inputs.append(tf.reshape(self.inputs[:, i], [-1] + list(self.input_shapes[i])))
+            self.stream_inputs.append(tf.reshape(self.inputs[:, i], [-1] + list(self.input_shape[i])))
 
         self.streams = []
         self.streams.append(Single3DStream('%s_C3D_Stream' % self.name, None, inputs=self.stream_inputs[0]))
