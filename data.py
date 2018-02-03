@@ -264,7 +264,7 @@ class MultiStreamJesterDataSet:
         for dataset in self.datasets:
             batch_inputs, batch_outputs = dataset.batch()
 
-            inputs.append(np.reshape(batch_inputs, [-1, 1] + list(self.shape)))
+            inputs.append(np.reshape(batch_inputs, [-1, 1, self.shape]))
 
             if outputs is None:
                 outputs = batch_outputs

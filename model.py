@@ -227,7 +227,7 @@ class MultiStreamNetwork(Network):
         self.output_shape = output_shape
         self.input_shape = input_shape
         self.flat_shape = np.prod(self.input_shape[0])
-        self.inputs = tf.placeholder(tf.float32, shape=[None, 4] + list(self.flat_shape))
+        self.inputs = tf.placeholder(tf.float32, shape=[None, 4, self.flat_shape])
 
         self.stream_inputs = []
 
