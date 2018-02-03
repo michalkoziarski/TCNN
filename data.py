@@ -269,8 +269,6 @@ class MultiStreamJesterDataSet:
             if outputs is None:
                 outputs = batch_outputs
 
-            assert outputs == batch_outputs
-
         return np.concatenate(inputs, axis=1), outputs
 
     def shuffle(self):
