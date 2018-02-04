@@ -123,7 +123,7 @@ class Network(ABC):
     def accuracy(self, dataset, session=None, restore=False, verbose=False):
         predictions = self.predict(dataset, session, restore, verbose)
 
-        return np.mean(np.argmax(predictions, 1) == dataset.outputs)
+        return np.mean(np.argmax(predictions, 1) == dataset.labels)
 
     def restore(self, session, model_path=None):
         if model_path is None:
