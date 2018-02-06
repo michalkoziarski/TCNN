@@ -14,7 +14,7 @@ parser.add_argument('-network', type=str, choices=['C2D', 'C3D', 'MultiStream'],
 parser.add_argument('-axis', type=int, choices=[0, 1, 2])
 parser.add_argument('-name', type=str)
 parser.add_argument('-learning_rate', type=float, default=0.0001)
-parser.add_argument('-batch_size', type=int, default=10)
+parser.add_argument('-batch_size', type=int, default=1)
 parser.add_argument('-epochs', type=int, default=20)
 parser.add_argument('-shape', type=list, default=[30, 100, 100, 3])
 parser.add_argument('-verbose', type=bool, default=True)
