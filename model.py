@@ -198,7 +198,8 @@ class Single3DStream(Network):
             convolution3d('convolution_5_1', [3, 3, 3, 512, 512]).\
             convolution3d('convolution_5_2', [3, 3, 3, 512, 512]).\
             pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
-            flatten()
+            flatten().\
+            fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu)
 
 
 class Single2DStream(Network):
@@ -216,7 +217,8 @@ class Single2DStream(Network):
             convolution2d('convolution_5_1', [3, 3, 512, 512]).\
             convolution2d('convolution_5_2', [3, 3, 512, 512]).\
             pooling2d('pooling_5', [1, 2, 4, 1]).\
-            flatten()
+            flatten().\
+            fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu)
 
 
 class MultiStreamNetwork(Network):
@@ -247,6 +249,5 @@ class MultiStreamNetwork(Network):
         self.setup()
 
     def setup(self):
-        self.fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
-            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
+        self.fully_connected('fully_connected_7', [-1, 2048], tf.nn.relu).\
             fully_connected('fully_connected_8', [2048, self.output_shape[0]])
