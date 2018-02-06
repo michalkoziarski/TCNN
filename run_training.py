@@ -17,7 +17,7 @@ parser.add_argument('-name', type=str)
 parser.add_argument('-learning_rate', type=float, default=0.0001)
 parser.add_argument('-batch_size', type=int, default=1)
 parser.add_argument('-epochs', type=int, default=20)
-parser.add_argument('-shape', type=list, default=[30, 100, 100, 3])
+parser.add_argument('-video_shape', type=list, default=[30, 100, 100, 3])
 parser.add_argument('-verbose', type=bool, default=True)
 parser.add_argument('-data_path', type=str)
 parser.add_argument('-early_stopping', type=bool, default=True)
@@ -54,13 +54,6 @@ else:
 train_set = DataSet(partition='train', **dataset_params)
 validation_set = DataSet(partition='validation', **dataset_params)
 
-if params['network'] == 'C2D':
-    input_shape = train_set.flattened_shape
-elif params['network'] == 'C3D':
-    input_shape = train_set.shape
-else:
-    input_shape = train_set.input_shape
-
-network = Network(input_shape=input_shape, output_shape=[train_set.N_CLASSES], name=params['name'])
+network = Network(input_shape=train_set.data_shape, output_shape=[train_set.N_CLASSES], name=params['name'])
 trainer = Trainer(network, train_set, validation_set=validation_set, **trainer_params)
 trainer.train()
