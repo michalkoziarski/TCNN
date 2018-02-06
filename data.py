@@ -243,9 +243,9 @@ class MultiStreamJesterDataSet:
             else:
                 raise ValueError
 
-            self.data_shape.append(self.datasets[-1].shape)
+            self.data_shape.append(self.datasets[-1].data_shape)
 
-        self.flattened_shape = np.prod(self.datasets[0].shape)
+        self.flattened_shape = np.prod(self.datasets[0].data_shape)
         self.batch_size = self.datasets[0].batch_size
         self.length = self.datasets[0].length
         self.labels = self.datasets[0].labels
