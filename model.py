@@ -220,25 +220,28 @@ class Single2DStream(Network):
 
 
 class MultiStreamNetwork(Network):
-    def __init__(self, name, output_shape, input_shape):
-        assert len(input_shape) == 4
+    def __init__(self, name, output_shape, input_shape, streams=('C3D', 'C2D_0', 'C2D_1', 'C2D_2')):
+        assert len(input_shape) == len(streams)
 
         self.name = name
         self.output_shape = output_shape
         self.input_shape = input_shape
         self.flat_shape = np.prod(self.input_shape[0])
-        self.inputs = tf.placeholder(tf.float32, shape=[None, 4, self.flat_shape])
+        self.inputs = tf.placeholder(tf.float32, shape=[None, len(streams), self.flat_shape])
 
         self.stream_inputs = []
+        self.streams = []
 
-        for i in range(4):
+        for i in range(len(streams)):
             self.stream_inputs.append(tf.reshape(self.inputs[:, i], [-1] + list(self.input_shape[i])))
 
-        self.streams = []
-        self.streams.append(Single3DStream('%s_C3D_Stream' % self.name, None, inputs=self.stream_inputs[0]))
+            if streams[i].startswith('C3D'):
+                stream_class = Single3DStream
+            else:
+                stream_class = Single2DStream
 
-        for i in range(3):
-            self.streams.append(Single2DStream('%s_C2D_%d_Stream' % (self.name, i), None, inputs=self.stream_inputs[i + 1]))
+            self.streams.append(stream_class('%s_%s_Stream_%d' % (self.name, streams[i], i),
+                                             None, inputs=self.stream_inputs[i]))
 
         self.outputs = tf.concat([stream.outputs for stream in self.streams], 1)
         self.setup()
