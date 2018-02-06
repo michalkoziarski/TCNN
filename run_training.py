@@ -50,11 +50,15 @@ else:
     Network = MultiStreamNetwork
 
     dataset_params['streams'] = params['streams']
-    trainer_params['streams'] = params['streams']
 
 train_set = DataSet(partition='train', **dataset_params)
 validation_set = DataSet(partition='validation', **dataset_params)
 
-network = Network(input_shape=train_set.data_shape, output_shape=[train_set.N_CLASSES], name=params['name'])
+network_params = {'input_shape': train_set.data_shape, 'output_shape': [train_set.N_CLASSES], 'name': params['name']}
+
+if params['network'] == 'MultiStream':
+    network_params['streams'] = params['streams']
+
+network = Network(**network_params)
 trainer = Trainer(network, train_set, validation_set=validation_set, **trainer_params)
 trainer.train()
