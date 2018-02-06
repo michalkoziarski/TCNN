@@ -33,7 +33,8 @@ if params['name'] is None:
     if params['network'] == 'C2D':
         params['name'] += '_%d' % params['axis']
 
-dataset_params = {key: params[key] for key in ['shape', 'batch_size', 'data_path', 'verbose', 'proportion', 'classes', 'preload']}
+dataset_params = {key: params[key] for key in ['video_shape', 'batch_size', 'data_path', 'verbose',
+                                               'proportion', 'classes', 'preload']}
 trainer_params = {key: params[key] for key in ['epochs', 'learning_rate', 'early_stopping', 'verbose']}
 
 if params['network'] == 'C2D':
