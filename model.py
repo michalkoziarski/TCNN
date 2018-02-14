@@ -242,8 +242,12 @@ class MultiStreamNetwork(Network):
             else:
                 stream_class = Single2DStream
 
-            self.streams.append(stream_class('%s_%s_Stream_%d' % (self.name, streams[i], i),
-                                             None, inputs=self.stream_inputs[i]))
+            stream_name = '%s_%s_Stream_%d' % (self.name, streams[i], i)
+
+            self.streams.append(stream_class(stream_name, None, inputs=self.stream_inputs[i]))
+
+            for value in tf.get_collection('%s_weight_decay' % stream_name):
+                tf.add_to_collection('%s_weight_decay' % self.name, value)
 
         self.outputs = tf.concat([stream.outputs for stream in self.streams], 1)
         self.setup()
