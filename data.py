@@ -229,15 +229,15 @@ class FlattenedJesterDataSet(JesterDataSet):
 class MultiStreamJesterDataSet:
     N_CLASSES = JesterDataSet.N_CLASSES
 
-    def __init__(self, streams=('C3D', 'C2D_0', 'C2D_1', 'C2D_2'), **kwargs):
+    def __init__(self, stream_types=('C3D', 'C2D_0', 'C2D_1', 'C2D_2'), **kwargs):
         self.datasets = []
         self.data_shape = []
 
-        for stream in streams:
-            if stream.startswith('C3D'):
+        for stream_type in stream_types:
+            if stream_type.startswith('C3D'):
                 self.datasets.append(JesterDataSet(**kwargs))
-            elif stream.startswith('C2D_'):
-                axis = int(stream[4:])
+            elif stream_type.startswith('C2D_'):
+                axis = int(stream_type[4:])
 
                 self.datasets.append(FlattenedJesterDataSet(axis=axis, **kwargs))
             else:

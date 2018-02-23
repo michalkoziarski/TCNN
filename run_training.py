@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('-network', type=str, choices=['C2D', 'C3D', 'MultiStream'], required=True)
 parser.add_argument('-axis', type=int, choices=[0, 1, 2])
-parser.add_argument('-streams', type=str, nargs='+', choices=['C2D_0', 'C2D_1', 'C2D_2', 'C3D'], required=False)
+parser.add_argument('-stream_types', type=str, nargs='+', choices=['C2D_0', 'C2D_1', 'C2D_2', 'C3D'], required=False)
 parser.add_argument('-name', type=str)
 parser.add_argument('-learning_rate', type=float, default=0.0001)
 parser.add_argument('-batch_size', type=int, default=1)
@@ -49,7 +49,7 @@ else:
     DataSet = MultiStreamJesterDataSet
     Network = MultiStreamNetwork
 
-    dataset_params['streams'] = params['streams']
+    dataset_params['stream_types'] = params['stream_types']
 
 train_set = DataSet(partition='train', **dataset_params)
 validation_set = DataSet(partition='validation', **dataset_params)
@@ -57,7 +57,7 @@ validation_set = DataSet(partition='validation', **dataset_params)
 network_params = {'input_shape': train_set.data_shape, 'output_shape': [train_set.N_CLASSES], 'name': params['name']}
 
 if params['network'] == 'MultiStream':
-    network_params['streams'] = params['streams']
+    network_params['stream_types'] = params['stream_types']
 
 network = Network(**network_params)
 trainer = Trainer(network, train_set, validation_set=validation_set, **trainer_params)

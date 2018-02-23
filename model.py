@@ -189,27 +189,29 @@ class C2DNetwork(Network):
 
 
 class MultiStreamNetwork(Network):
-    def __init__(self, name, output_shape, input_shape, streams=('C3D', 'C2D_0', 'C2D_1', 'C2D_2')):
-        assert len(input_shape) == len(streams)
+    def __init__(self, name, output_shape, input_shape, stream_types=('C3D', 'C2D_0', 'C2D_1', 'C2D_2')):
+        assert len(input_shape) == len(stream_types)
 
         self.name = name
         self.output_shape = output_shape
         self.input_shape = input_shape
         self.flat_shape = np.prod(self.input_shape[0])
-        self.inputs = tf.placeholder(tf.float32, shape=[None, len(streams), self.flat_shape])
-
+        self.inputs = tf.placeholder(tf.float32, shape=[None, len(stream_types), self.flat_shape])
+        self.stream_types = stream_types
         self.stream_inputs = []
         self.streams = []
+        self.setup()
 
-        for i in range(len(streams)):
+    def setup(self):
+        for i in range(len(self.stream_types)):
             self.stream_inputs.append(tf.reshape(self.inputs[:, i], [-1] + list(self.input_shape[i])))
 
-            if streams[i].startswith('C3D'):
+            if self.stream_types[i].startswith('C3D'):
                 stream_class = C3DNetwork
             else:
                 stream_class = C2DNetwork
 
-            stream_name = '%s_%s_Stream_%d' % (self.name, streams[i], i)
+            stream_name = '%s_%s_Stream_%d' % (self.name, self.stream_types[i], i)
 
             self.streams.append(stream_class(stream_name, None, inputs=self.stream_inputs[i], include_top=False))
 
@@ -217,7 +219,5 @@ class MultiStreamNetwork(Network):
                 tf.add_to_collection('%s_weight_decay' % self.name, value)
 
         self.outputs = tf.concat([stream.outputs for stream in self.streams], 1)
-        self.setup()
 
-    def setup(self):
         self.fully_connected('fully_connected_8', [-1, self.output_shape[0]])
