@@ -9,7 +9,7 @@ from trainer import MODELS_PATH
 
 
 class Network(ABC):
-    def __init__(self, name, output_shape, input_shape=None, inputs=None):
+    def __init__(self, name, output_shape, input_shape=None, inputs=None, include_top=True):
         assert inputs is not None or input_shape is not None
 
         self.name = name
@@ -21,6 +21,7 @@ class Network(ABC):
             self.inputs = tf.placeholder(tf.float32, shape=[None] + list(input_shape))
 
         self.outputs = self.inputs
+        self.include_top = include_top
         self.setup()
 
     def convolution(self, layer_name, shape, weight_decay=0.0005, stride=1, padding='SAME', kind='2d'):
@@ -158,8 +159,10 @@ class C3DNetwork(Network):
             pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
             flatten().\
             fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
-            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
-            fully_connected('fully_connected_8', [2048, self.output_shape[0]])
+            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu)
+
+        if self.include_top:
+            self.fully_connected('fully_connected_8', [2048, self.output_shape[0]])
 
 
 class C2DNetwork(Network):
@@ -179,46 +182,10 @@ class C2DNetwork(Network):
             pooling2d('pooling_5', [1, 2, 4, 1]).\
             flatten().\
             fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu).\
-            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu).\
-            fully_connected('fully_connected_8', [2048, self.output_shape[0]])
+            fully_connected('fully_connected_7', [2048, 2048], tf.nn.relu)
 
-
-class Single3DStream(Network):
-    def setup(self):
-        self.convolution3d('convolution_1', [3, 3, 3, 3, 64]).\
-            pooling3d('pooling_1', [1, 1, 2, 2, 1]).\
-            convolution3d('convolution_2', [3, 3, 3, 64, 128]).\
-            pooling3d('pooling_2', [1, 2, 2, 2, 1]).\
-            convolution3d('convolution_3_1', [3, 3, 3, 128, 256]).\
-            convolution3d('convolution_3_2', [3, 3, 3, 256, 256]).\
-            pooling3d('pooling_3', [1, 2, 2, 2, 1]).\
-            convolution3d('convolution_4_1', [3, 3, 3, 256, 512]).\
-            convolution3d('convolution_4_2', [3, 3, 3, 512, 512]).\
-            pooling3d('pooling_4', [1, 2, 2, 2, 1]).\
-            convolution3d('convolution_5_1', [3, 3, 3, 512, 512]).\
-            convolution3d('convolution_5_2', [3, 3, 3, 512, 512]).\
-            pooling3d('pooling_5', [1, 2, 2, 2, 1]).\
-            flatten().\
-            fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu)
-
-
-class Single2DStream(Network):
-    def setup(self):
-        self.convolution2d('convolution_1', [3, 3, 3, 64]).\
-            pooling2d('pooling_1', [1, 1, 4, 1]).\
-            convolution2d('convolution_2', [3, 3, 64, 128]).\
-            pooling2d('pooling_2', [1, 2, 4, 1]).\
-            convolution2d('convolution_3_1', [3, 3, 128, 256]).\
-            convolution2d('convolution_3_2', [3, 3, 256, 256]).\
-            pooling2d('pooling_3', [1, 2, 4, 1]).\
-            convolution2d('convolution_4_1', [3, 3, 256, 512]).\
-            convolution2d('convolution_4_2', [3, 3, 512, 512]).\
-            pooling2d('pooling_4', [1, 2, 4, 1]).\
-            convolution2d('convolution_5_1', [3, 3, 512, 512]).\
-            convolution2d('convolution_5_2', [3, 3, 512, 512]).\
-            pooling2d('pooling_5', [1, 2, 4, 1]).\
-            flatten().\
-            fully_connected('fully_connected_6', [-1, 2048], tf.nn.relu)
+        if self.include_top:
+            self.fully_connected('fully_connected_8', [2048, self.output_shape[0]])
 
 
 class MultiStreamNetwork(Network):
@@ -238,13 +205,13 @@ class MultiStreamNetwork(Network):
             self.stream_inputs.append(tf.reshape(self.inputs[:, i], [-1] + list(self.input_shape[i])))
 
             if streams[i].startswith('C3D'):
-                stream_class = Single3DStream
+                stream_class = C3DNetwork
             else:
-                stream_class = Single2DStream
+                stream_class = C2DNetwork
 
             stream_name = '%s_%s_Stream_%d' % (self.name, streams[i], i)
 
-            self.streams.append(stream_class(stream_name, None, inputs=self.stream_inputs[i]))
+            self.streams.append(stream_class(stream_name, None, inputs=self.stream_inputs[i], include_top=False))
 
             for value in tf.get_collection('%s_weight_decay' % stream_name):
                 tf.add_to_collection('%s_weight_decay' % self.name, value)
@@ -253,5 +220,4 @@ class MultiStreamNetwork(Network):
         self.setup()
 
     def setup(self):
-        self.fully_connected('fully_connected_7', [-1, 2048], tf.nn.relu).\
-            fully_connected('fully_connected_8', [2048, self.output_shape[0]])
+        self.fully_connected('fully_connected_8', [-1, self.output_shape[0]])
