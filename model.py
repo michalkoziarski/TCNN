@@ -226,3 +226,7 @@ class MultiStreamNetwork(Network):
         self.outputs = tf.concat([stream.outputs for stream in self.streams], 1)
 
         self.fully_connected('fully_connected_8', [-1, self.output_shape[0]])
+
+    def load_pretrained_streams(self, session):
+        for i in range(len(self.streams)):
+            self.streams[i].restore(session, os.path.join(MODELS_PATH, self.stream_names[i]))
