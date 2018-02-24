@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from tqdm import tqdm
+from model import MultiStreamNetwork
 
 
 MODELS_PATH = os.path.join(os.path.dirname(__file__), 'models')
@@ -12,13 +13,14 @@ LOGS_PATH = os.path.join(os.path.dirname(__file__), 'logs')
 
 class Trainer:
     def __init__(self, network, train_set, epochs, learning_rate, evaluation_step=1, validation_set=None,
-                 early_stopping=False, verbose=False):
+                 early_stopping=False, use_pretrained_streams=False, verbose=False):
         self.network = network
         self.train_set = train_set
         self.epochs = epochs
         self.evaluation_step = evaluation_step
         self.validation_set = validation_set
         self.early_stopping = early_stopping
+        self.use_pretrained_streams = use_pretrained_streams
         self.verbose = verbose
         self.global_step = tf.get_variable('%s_global_step' % network.name, [],
                                            initializer=tf.constant_initializer(0),
@@ -66,6 +68,13 @@ class Trainer:
                     logging.info('Restoring the model...')
 
                 self.saver.restore(session, checkpoint.model_checkpoint_path)
+            elif self.use_pretrained_streams:
+                assert isinstance(self.network, MultiStreamNetwork)
+
+                if self.verbose:
+                    logging.info('Loading pretrained streams...')
+
+                self.network.load_pretrained_streams(session)
 
             batches_processed = tf.train.global_step(session, self.global_step)
             batches_per_epoch = int(self.train_set.length / self.train_set.batch_size)

@@ -14,6 +14,7 @@ parser.add_argument('-network', type=str, choices=['C2D', 'C3D', 'MultiStream'],
 parser.add_argument('-axis', type=int, choices=[0, 1, 2])
 parser.add_argument('-stream_types', type=str, nargs='+', choices=['C2D_0', 'C2D_1', 'C2D_2', 'C3D'], required=False)
 parser.add_argument('-stream_names', type=str, nargs='+', required=False)
+parser.add_argument('-use_pretrained_streams', type=bool, default=False)
 parser.add_argument('-name', type=str)
 parser.add_argument('-learning_rate', type=float, default=0.0001)
 parser.add_argument('-batch_size', type=int, default=1)
@@ -36,7 +37,8 @@ if params['name'] is None:
 
 dataset_params = {key: params[key] for key in ['video_shape', 'batch_size', 'data_path', 'verbose',
                                                'proportion', 'classes', 'preload']}
-trainer_params = {key: params[key] for key in ['epochs', 'learning_rate', 'early_stopping', 'verbose']}
+trainer_params = {key: params[key] for key in ['epochs', 'learning_rate', 'early_stopping', 'verbose',
+                                               'use_pretrained_streams']}
 
 if params['network'] == 'C2D':
     DataSet = FlattenedJesterDataSet
