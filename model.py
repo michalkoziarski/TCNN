@@ -189,7 +189,8 @@ class C2DNetwork(Network):
 
 
 class MultiStreamNetwork(Network):
-    def __init__(self, name, output_shape, input_shape, stream_types=('C3D', 'C2D_0', 'C2D_1', 'C2D_2')):
+    def __init__(self, name, output_shape, input_shape, stream_types=('C3D', 'C2D_0', 'C2D_1', 'C2D_2'),
+                 stream_names=None):
         assert len(input_shape) == len(stream_types)
 
         self.name = name
@@ -198,6 +199,7 @@ class MultiStreamNetwork(Network):
         self.flat_shape = np.prod(self.input_shape[0])
         self.inputs = tf.placeholder(tf.float32, shape=[None, len(stream_types), self.flat_shape])
         self.stream_types = stream_types
+        self.stream_names = stream_names
         self.stream_inputs = []
         self.streams = []
         self.setup()
@@ -211,7 +213,10 @@ class MultiStreamNetwork(Network):
             else:
                 stream_class = C2DNetwork
 
-            stream_name = '%s_%s_Stream_%d' % (self.name, self.stream_types[i], i)
+            if self.stream_names is None:
+                stream_name = '%s_%s_Stream_%d' % (self.name, self.stream_types[i], i)
+            else:
+                stream_name = self.stream_names[i]
 
             self.streams.append(stream_class(stream_name, None, inputs=self.stream_inputs[i], include_top=False))
 

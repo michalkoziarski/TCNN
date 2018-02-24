@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-network', type=str, choices=['C2D', 'C3D', 'MultiStream'], required=True)
 parser.add_argument('-axis', type=int, choices=[0, 1, 2])
 parser.add_argument('-stream_types', type=str, nargs='+', choices=['C2D_0', 'C2D_1', 'C2D_2', 'C3D'], required=False)
+parser.add_argument('-stream_names', type=str, nargs='+', required=False)
 parser.add_argument('-name', type=str)
 parser.add_argument('-learning_rate', type=float, default=0.0001)
 parser.add_argument('-batch_size', type=int, default=1)
@@ -58,6 +59,7 @@ network_params = {'input_shape': train_set.data_shape, 'output_shape': [train_se
 
 if params['network'] == 'MultiStream':
     network_params['stream_types'] = params['stream_types']
+    network_params['stream_names'] = params['stream_names']
 
 network = Network(**network_params)
 trainer = Trainer(network, train_set, validation_set=validation_set, **trainer_params)
