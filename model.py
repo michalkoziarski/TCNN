@@ -5,7 +5,9 @@ import tensorflow as tf
 
 from abc import ABC, abstractmethod
 from tqdm import tqdm
-from trainer import MODELS_PATH
+
+
+MODELS_PATH = os.path.join(os.path.dirname(__file__), 'models')
 
 
 class Network(ABC):
