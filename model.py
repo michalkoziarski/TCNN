@@ -24,6 +24,7 @@ class Network(ABC):
 
         self.outputs = self.inputs
         self.include_top = include_top
+        self.variables = {}
         self.setup()
 
     def convolution(self, layer_name, shape, weight_decay=0.0005, stride=1, padding='SAME', kind='2d'):
@@ -90,6 +91,8 @@ class Network(ABC):
 
         variable = tf.get_variable('%s_%s' % (self.name, variable_name), shape, initializer=initializer)
 
+        self.variables['%s_%s' % (self.name, variable_name)] = variable
+
         if weight_decay is not None:
             tf.add_to_collection('%s_weight_decay' % self.name, tf.nn.l2_loss(variable) * weight_decay)
 
@@ -137,7 +140,7 @@ class Network(ABC):
         assert checkpoint
         assert checkpoint.model_checkpoint_path
 
-        tf.train.Saver().restore(session, checkpoint.model_checkpoint_path)
+        tf.train.Saver(self.variables).restore(session, checkpoint.model_checkpoint_path)
 
     @abstractmethod
     def setup(self):
@@ -204,6 +207,7 @@ class MultiStreamNetwork(Network):
         self.stream_names = stream_names
         self.stream_inputs = []
         self.streams = []
+        self.variables = {}
         self.setup()
 
     def setup(self):
@@ -221,6 +225,7 @@ class MultiStreamNetwork(Network):
                 stream_name = self.stream_names[i]
 
             self.streams.append(stream_class(stream_name, None, inputs=self.stream_inputs[i], include_top=False))
+            self.variables = {**self.variables, **self.streams[-1].variables}
 
             for value in tf.get_collection('%s_weight_decay' % stream_name):
                 tf.add_to_collection('%s_weight_decay' % self.name, value)
